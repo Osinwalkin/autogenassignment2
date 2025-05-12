@@ -17,7 +17,7 @@ LLM_CONFIG = {
             "model": "open-mistral-nemo",
             "api_key": mistral_api_key,  # Use the loaded key here
             "api_type": "mistral",
-            "api_rate_limit": 0.25,      # As specified in assignment
+            "api_rate_limit": 0.1,      # As specified in assignment
             "repeat_penalty": 1.1,     # As specified in assignment
             "temperature": 0.0,        # As specified in assignment
             "seed": 42,                # As specified in assignment
