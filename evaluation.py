@@ -67,7 +67,7 @@ def format_history_for_critic(conversation_history: list) -> str:
         role = msg.get("role", "unknown_role")
         
         sender_name = msg.get("name")
-        if not sender_name or sender_name == role: # If name is same as role or not present, just use role for clarity
+        if not sender_name or sender_name == role:
             sender_display = role.upper()
         else:
             sender_display = f"{sender_name} ({role})"
@@ -76,30 +76,27 @@ def format_history_for_critic(conversation_history: list) -> str:
         content_str = ""
 
         if isinstance(content, str):
-            if content.startswith("***** Response from calling tool"): # UserProxy sending tool result
+            if content.startswith("***** Response from calling tool"):
                 content_str = f"TOOL_RESPONSE:\n{content}"
             else:
                 content_str = content
-        elif isinstance(content, list) and content and isinstance(content[0], dict) and "tool_calls" in content[0]: # Assistant suggesting tool call
+        elif isinstance(content, list) and content and isinstance(content[0], dict) and "tool_calls" in content[0]:
             content_str = f"ASSISTANT_SUGGESTS_TOOL_CALL: {json.dumps(content[0]['tool_calls'])}"
-        # Add more specific checks if other structured content appears
-        else:
-            content_str = str(content) # Fallback to string representation
 
-        # Sanitize newlines in the content_str to prevent breaking the prompt structure too much
+        else:
+            content_str = str(content)
+
         content_str_oneline = content_str.replace("\n", " <NEWLINE> ")
         formatted_messages.append(f"FROM {sender_display}:\n{content_str_oneline}\n-----------------------------")
     
     return "\n".join(formatted_messages) if formatted_messages else "No conversation history provided."
 
 
+# Uses the LLM Critic agent to evaluate the paper search agent's response.
 def evaluate_agent_response(user_prompt: str, agent_final_response: str, conversation_history: list) -> dict:
-    """
-    Uses the LLM Critic agent to evaluate the paper search agent's response.
-    """
     history_str = format_history_for_critic(conversation_history)
 
-    if not isinstance(agent_final_response, str): # Ensure agent_final_response is a string
+    if not isinstance(agent_final_response, str):
         agent_final_response = str(agent_final_response)
 
     critic_request_prompt = f"""User Prompt to PaperSearchAssistant:
@@ -130,12 +127,12 @@ Do not include any explanatory text before or after the JSON object itself.
     if isinstance(critic_response_message, dict) and "content" in critic_response_message:
         critic_evaluation_str = critic_response_message["content"]
     elif isinstance(critic_response_message, str):
-        critic_evaluation_str = critic_response_message # Direct string response
+        critic_evaluation_str = critic_response_message
     else:
          print(f"Warning: Critic response was not in expected format. RAW CRITIC RESPONSE: {critic_response_message}")
          return {"error": "Critic returned unexpected response format", "raw_response": str(critic_response_message)}
 
-    print(f"📝 Critic raw response (full): >>>\n{critic_evaluation_str}\n<<<")
+    print(f" Critic raw response (full): >>>\n{critic_evaluation_str}\n<<<")
 
     text_to_parse = critic_evaluation_str.strip()
     match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", critic_evaluation_str, re.IGNORECASE)
@@ -144,31 +141,31 @@ Do not include any explanatory text before or after the JSON object itself.
     else:
         text_to_parse = critic_evaluation_str.strip()
     
-    print(f"🧐 Text after stripping markdown: >>>\n{text_to_parse}\n<<<")
+    print(f" Text after stripping markdown: >>>\n{text_to_parse}\n<<<")
 
-    repaired_json_str = "" # Define for scope in error messages
+    repaired_json_str = ""
     try:
-        print(f"🧐 String being passed to repair_json: >>>\n{text_to_parse}\n<<<")
-        repaired_json_str = repair_json(text_to_parse) # Use the corrected function name
-        print(f"🔧 String after repair_json: >>>\n{repaired_json_str}\n<<<")
+        print(f" String being passed to repair_json: >>>\n{text_to_parse}\n<<<")
+        repaired_json_str = repair_json(text_to_parse)
+        print(f" String after repair_json: >>>\n{repaired_json_str}\n<<<")
 
         evaluation_json = json.loads(repaired_json_str)
         return evaluation_json
 
     except json.JSONDecodeError as e:
-        print(f"❌ Error decoding JSON even after repair_json: {e}")
-        print(f"   Problematic string (after repair_json) was: >>>\n{repaired_json_str}\n<<<") # Corrected var name
+        print(f" Error decoding JSON even after repair_json: {e}")
+        print(f"   Problematic string (after repair_json) was: >>>\n{repaired_json_str}\n<<<")
         return {
-            "error": "Failed to decode JSON from critic even after repairing", # Corrected message
+            "error": "Failed to decode JSON from critic even after repairing",
             "original_raw_response": critic_evaluation_str,
             "markdown_stripped_response": text_to_parse,
-            "repaired_attempt_response": repaired_json_str, # Corrected var name
+            "repaired_attempt_response": repaired_json_str,
         }
     except Exception as e:
-        print(f"❌ An unexpected error occurred during JSON repairing or parsing: {e}")
-        traceback.print_exc() # Print full traceback for unexpected errors
+        print(f" An unexpected error occurred during JSON repairing or parsing: {e}")
+        traceback.print_exc()
         return {
-            "error": "Unexpected error during JSON repairing/parsing", # Corrected message
+            "error": "Unexpected error during JSON repairing/parsing",
             "original_raw_response": critic_evaluation_str,
             "details": str(e)
         }
@@ -186,7 +183,6 @@ TERMINATE
     sample_history = [
         {"role": "user", "name": "UserQueryProxy", "content": sample_user_prompt},
         {"role": "assistant", "name": "PaperSearchAssistant", "content": "Okay, I will search for that."},
-        # Simulate a tool call and response for testing robustness of critic
         {"role": "assistant", "name": "PaperSearchAssistant", "content": json.dumps([{"tool_calls": [{"id": "call_123", "type": "function", "function": {"name": "search_research_papers", "arguments": json.dumps({"topic": "AI ethics", "year": 2022, "year_filter": "after", "limit": 2})}}]}])},
         {"role": "user", "name": "UserQueryProxy", "content": json.dumps([{"tool_call_id": "call_123", "role": "tool", "name": "search_research_papers", "content": json.dumps([{"title": "The Moral Machine Experiment", "year": 2023, "citationCount": 150, "url": "example.com/moralmachine"}, {"title": "Algorithmic Bias and Fairness", "year": 2024, "citationCount": 90, "url": "example.com/bias"}])}])},
         {"role": "assistant", "name": "PaperSearchAssistant", "content": sample_agent_response}

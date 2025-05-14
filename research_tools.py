@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import json
 import traceback
 
-# Semantic Scholar API endpoint f
+# Semantic Scholar API endpoint
 S2_API_URL = "https://api.semanticscholar.org/graph/v1/paper/search/bulk"
 
 def _construct_s2_api_params(
@@ -83,7 +83,7 @@ def search_research_papers(
 
     all_found_papers = []
     next_token = None
-    current_response = None # To pass to error handler if needed
+    current_response = None
 
     try:
         while len(all_found_papers) < limit:
@@ -120,7 +120,7 @@ def search_research_papers(
         return json.dumps({"error": f"An unexpected programming error occurred: {str(e)}", "trace": traceback.format_exc()})
 
 
-# Describes the function to the LLM
+
 search_research_papers_tool_schema = {
     "name": "search_research_papers",
     "description": """Searches for research papers on Semantic Scholar based on topic,

@@ -2,7 +2,7 @@ import json
 from main_agent import create_paper_search_agents, run_paper_search_chat
 from evaluation import evaluate_agent_response
 
-# --- Test Prompts (from Phase 4, Step 2) ---
+# Test Prompts
 TEST_PROMPTS_FULL = [
     # A. Typical Prompts
     "Find 3 research papers on 'transformer models in NLP' published in 2021 with more than 200 citations.",
@@ -28,12 +28,9 @@ all_evaluations = []
 
 def main():
     print("--- Starting Evaluation Suite ---")
-
-    # Create agents once to be used for all test cases
-    # The run_paper_search_chat function will reset them for each chat.
-    print("🔧 Initializing agents for the evaluation suite...")
+    print("Initializing agents for the evaluation suite...")
     user_proxy, assistant = create_paper_search_agents()
-    print("✅ Agents initialized.")
+    print("Agents initialized.")
 
     if test_indices_to_run is not None:
         prompts_to_run = [TEST_PROMPTS_FULL[i] for i in test_indices_to_run]
@@ -42,11 +39,10 @@ def main():
         prompts_to_run = TEST_PROMPTS_FULL
         print(f"Running all {len(prompts_to_run)} test prompts.")
 
-    all_evaluations_summary = [] # To store just the critic's output for final summary
+    all_evaluations_summary = [] # To store critics output
 
-    # Clear the output file at the start of a new suite run
     with open(OUTPUT_FILE, "w") as f:
-        pass # Creates or truncates the file
+        pass
 
     for i, prompt_text in enumerate(prompts_to_run):
         current_prompt_index = test_indices_to_run[i] if test_indices_to_run else i
@@ -54,17 +50,17 @@ def main():
         print(f"User Prompt: {prompt_text}")
 
         try:
-            # 1. Run the PaperSearchAgent
+            # Run the PaperSearchAgent
             agent_final_response, conversation_history = run_paper_search_chat(
                 task_message=prompt_text,
-                user_proxy=user_proxy, # Pass the created agents
-                assistant=assistant   # Pass the created agents
+                user_proxy=user_proxy,
+                assistant=assistant   
             )
 
             print("\n--- Agent Interaction Summary (for this test case) ---")
             print(f"Agent's Final User-Facing Response:\n{agent_final_response}")
 
-            # 2. Run the Critic Agent
+            # Run the Critic Agent
             if not conversation_history:
                 print("WARNING: No conversation history was recorded. Skipping critic evaluation for this prompt.")
                 evaluation_result = {"error": "No conversation history available for critic."}
@@ -84,9 +80,8 @@ def main():
                 "user_prompt": prompt_text,
                 "agent_final_response": agent_final_response,
                 "critic_evaluation": evaluation_result
-                # "conversation_history": conversation_history, # Exclude for brevity in file, but useful for deep dive
             }
-            all_evaluations_summary.append(evaluation_result) # Store just critic output for final summary
+            all_evaluations_summary.append(evaluation_result)
 
         except Exception as e:
             print(f"ERROR occurred during Test Case {i+1} for prompt: '{prompt_text}'")
@@ -100,9 +95,8 @@ def main():
                 "error_during_processing": str(e),
                 "traceback": traceback.format_exc()
             }
-            # Still try to save error information
         
-        # Save results progressively to a file
+        # Save results to a file
         with open(OUTPUT_FILE, "a") as f:
             f.write(json.dumps(current_evaluation_data) + "\n")
         print(f"Results for Test Case {i+1} appended to {OUTPUT_FILE}")
@@ -110,7 +104,7 @@ def main():
 
     print("\n\n--- Evaluation Suite Finished ---")
     
-    # Basic summary of scores (if evaluations were successful)
+    # Basic summary of scores
     print("\n--- Overall Score Summary (from successful evaluations) ---")
     successful_evals = [e for e in all_evaluations_summary if e and "error" not in e]
     if successful_evals:

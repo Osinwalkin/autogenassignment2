@@ -1,28 +1,25 @@
 from autogen.agentchat import AssistantAgent, UserProxyAgent
-from config import LLM_CONFIG # Import the config from your config.py
+from config import LLM_CONFIG
 
 print("Attempting to create agents...")
 
 try:
-    # Create a simple Assistant Agent
     assistant = AssistantAgent(
         name="Assistant",
         llm_config=LLM_CONFIG
     )
 
-    # Create a User Proxy Agent
     user_proxy = UserProxyAgent(
         name="UserProxy",
-        human_input_mode="NEVER", # Don't ask for input
-        max_consecutive_auto_reply=1, # Prevent loops
-        code_execution_config=False, # Disable code execution for this simple test
-        is_termination_msg=lambda x: x.get("content", "").rstrip().endswith("TERMINATE"), # Define how it detects termination
+        human_input_mode="NEVER",
+        max_consecutive_auto_reply=1,
+        code_execution_config=False, 
+        is_termination_msg=lambda x: x.get("content", "").rstrip().endswith("TERMINATE"),
         system_message="You are a user proxy. Reply TERMINATE when the task is done.",
     )
 
     print("Agents created successfully.")
 
-    # Initiate a very simple chat
     print("Initiating test chat...")
     user_proxy.initiate_chat(
         assistant,

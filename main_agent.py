@@ -88,12 +88,12 @@ def run_paper_search_chat(task_message: str, user_proxy: UserProxyAgent, assista
     user_proxy.reset()
     assistant.reset()
 
-    print(f"💬 {user_proxy.name} initiating chat with {assistant.name} for task: '{task_message}'")
+    print(f" {user_proxy.name} initiating chat with {assistant.name} for task: '{task_message}'")
     user_proxy.initiate_chat(
         recipient=assistant,
         message=task_message,
     )
-    print(f"🏁 Chat completed for task: '{task_message}'")
+    print(f" Chat completed for task: '{task_message}'")
 
     # --- Extracting Final Response and History ---
     agent_final_user_facing_response = "No suitable user-facing response found from assistant."
