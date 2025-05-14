@@ -24,8 +24,8 @@ Dette projekt implementerer en AI agent ved brug af Autogen frameworket til at s
 
 ## Projekt Struktur
 
-.env
-.gitignore
+* .env
+* .gitignore
 README.md
 config.py # LLM configuration for Autogen (Mistral AI)
 evaluation.py # Critic agent implementering og evaluation logic
