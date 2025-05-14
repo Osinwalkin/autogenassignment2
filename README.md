@@ -26,13 +26,13 @@ Dette projekt implementerer en AI agent ved brug af Autogen frameworket til at s
 
 * .env
 * .gitignore
-README.md
-config.py # LLM configuration for Autogen (Mistral AI)
-evaluation.py # Critic agent implementering og evaluation logic
-main_agent.py # Paper search agent implementering
-research_tools.py # Semantic Scholar API tool implementering og schema
-requirements.txt # Python dependencies
-run_evaluation_suite.py #
+* README.md
+* config.py # LLM configuration for Autogen (Mistral AI)
+* evaluation.py # Critic agent implementering og evaluation logic
+* main_agent.py # Paper search agent implementering
+* research_tools.py # Semantic Scholar API tool implementering og schema
+* requirements.txt # Python dependencies
+* run_evaluation_suite.py #
 
 (test.py og test_setup.py er ikke relevante for projektet og var noget jeg kørte ved siden af for at teste mistral APIen)
 
