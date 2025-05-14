@@ -20,7 +20,7 @@ TEST_PROMPTS_FULL = [
 
 # Configuration for prompts
 # 2 = "I need some recent papers on reinforcement learning."
-test_indices_to_run = [2]
+test_indices_to_run = [0]
 
 OUTPUT_FILE = "evaluation_results.jsonl"
 

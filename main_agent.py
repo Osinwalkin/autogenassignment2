@@ -6,7 +6,7 @@ import json
 
 ASSISTANT_AGENT_NAME = "PaperSearchAssistant"
 USER_PROXY_AGENT_NAME = "UserQueryProxy"
-MAX_CONSECUTIVE_AUTO_REPLY = 8
+MAX_CONSECUTIVE_AUTO_REPLY = 5
 
 ASSISTANT_SYSTEM_MESSAGE = f"""You are a helpful AI assistant specialized in finding research papers.
 You have access to a function 'search_research_papers' to search Semantic Scholar.
