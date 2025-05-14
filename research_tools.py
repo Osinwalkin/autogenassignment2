@@ -4,11 +4,7 @@ from dotenv import load_dotenv
 import json
 import traceback
 
-# Load environment variables
-#load_dotenv()
-#SEMANTIC_SCHOLAR_API_KEY = os.getenv("SEMANTIC_SCHOLAR_API_KEY") # Still good to have if you get one
-
-# Semantic Scholar API endpoint for BULK paper search
+# Semantic Scholar API endpoint f
 S2_API_URL = "https://api.semanticscholar.org/graph/v1/paper/search/bulk"
 
 def _construct_s2_api_params(
@@ -65,7 +61,7 @@ def _handle_request_errors(e: requests.exceptions.RequestException, response_obj
         return json.dumps({"error": f"Connection error occurred: {e}"})
     elif isinstance(e, requests.exceptions.Timeout):
         return json.dumps({"error": f"Timeout error occurred: {e}"})
-    else: # General RequestException
+    else: 
         return json.dumps({"error": f"An unexpected error occurred with the request: {e}"})
 
 def search_research_papers(
@@ -98,7 +94,7 @@ def search_research_papers(
                 current_api_params.pop('token', None)
 
             current_response = requests.get(S2_API_URL, headers=headers, params=current_api_params, timeout=20)
-            current_response.raise_for_status() # Will raise HTTPError on 4xx/5xx
+            current_response.raise_for_status() 
             data = current_response.json()
 
             if 'data' in data and data['data']:
@@ -119,46 +115,82 @@ def search_research_papers(
         return json.dumps(all_found_papers[:limit], indent=2)
 
     except requests.exceptions.RequestException as req_err:
-        # Pass the current_response object to the handler if available
         return _handle_request_errors(req_err, current_response)
-    except Exception as e: # Catch-all for truly unexpected errors
+    except Exception as e: 
         return json.dumps({"error": f"An unexpected programming error occurred: {str(e)}", "trace": traceback.format_exc()})
 
-# --- Basic Test Section ---
+
+# Describes the function to the LLM
+search_research_papers_tool_schema = {
+    "name": "search_research_papers",
+    "description": """Searches for research papers on Semantic Scholar based on topic,
+publication year (and a filter: "in", "before", "after"), and minimum citations.
+Returns a JSON string containing a list of found papers or an error message.""",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "topic": {
+                "type": "string",
+                "description": "The research topic or keywords to search for (e.g., 'machine learning', 'CRISPR gene editing'). This is a required field.",
+            },
+            "year": {
+                "type": "integer",
+                "description": "Optional. The target year for filtering (e.g., 2020). Used in conjunction with year_filter.",
+            },
+            "year_filter": {
+                "type": "string",
+                "description": "Optional. How to use the year: 'in' (published in the given year), 'before' (published before the given year, e.g., year=2020 means up to 2019), 'after' (published after the given year, e.g., year=2020 means from 2021 onwards). Requires 'year' to be set.",
+                "enum": ["in", "before", "after"],
+            },
+            "min_citations": {
+                "type": "integer",
+                "description": "Optional. The minimum number of citations a paper should have (e.g., 100). If not provided, no citation filter is applied.",
+            },
+            "limit": {
+                "type": "integer",
+                "description": "Optional. The maximum number of papers to return. Defaults to 5 if not specified by the user, but the agent can choose a different limit if appropriate.",
+                "default": 5,
+            },
+        },
+        "required": ["topic"],
+    },
+}
+
+# basic tests
 if __name__ == "__main__":
     print("--- Testing search_research_papers (using /paper/search/bulk) ---")
 
-    # Test Case 1: Basic topic search
+    # Test Case 1 Basic topic search
     print("\nTest Case 1: Basic topic search (machine learning)")
     results1 = search_research_papers(topic="machine learning", limit=2)
     print(results1)
 
-    # Test Case 2: Topic with year "in"
+    # Test Case 2 Topic with year "in"
     print("\nTest Case 2: Topic with year 'in' (artificial intelligence, 2022)")
     results2 = search_research_papers(topic="artificial intelligence", year=2022, year_filter="in", limit=2)
     print(results2)
 
-    # Test Case 3: Topic with year "before" and citations
+    # Test Case 3 Topic with year "before" and citations
     print("\nTest Case 3: Topic with year 'before' and citations (natural language processing, before 2020, min 100 citations)")
     results3 = search_research_papers(topic="natural language processing", year=2020, year_filter="before", min_citations=100, limit=2)
     print(results3)
 
-    # Test Case 4: Topic with year "after"
+    # Test Case 4 Topic with year "after"
     print("\nTest Case 4: Topic with year 'after' (reinforcement learning, after 2021)")
     results4 = search_research_papers(topic="reinforcement learning", year=2021, year_filter="after", limit=2)
     print(results4)
 
-    # Test Case 5: No results expected (highly specific or non-existent)
+    # Test Case 5 No results expected (highly specific or non-existent)
     print("\nTest Case 5: No results (underwater basket weaving, 2050)")
     results5 = search_research_papers(topic="underwater basket weaving", year=2050, year_filter="in", limit=2)
     print(results5)
 
-    # Test Case 6: Empty topic
+    # Test Case 6 Empty topic
     print("\nTest Case 6: Empty topic")
     results6 = search_research_papers(topic="", limit=2)
     print(results6)
 
-    # Test Case 7: Only min_citations
+    # Test Case 7 Only min_citations
     print("\nTest Case 7: Only min_citations (deep learning, min 5000 citations)")
     results7 = search_research_papers(topic="deep learning", min_citations=5000, limit=3)
     print(results7)
@@ -170,3 +202,5 @@ if __name__ == "__main__":
 
 
     print("\n--- Testing Finished ---")
+
+
